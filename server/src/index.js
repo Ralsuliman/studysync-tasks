@@ -11,15 +11,17 @@ import connectDB from "./db.js"; // whatever your DB connect file is called
 
 dotenv.config();
 
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 // Create HTTP server and attach Socket.IO
 const httpServer = http.createServer(app);
 
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: "http://localhost:5173", // Vite dev frontend
+    origin: CLIENT_ORIGIN,
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
@@ -39,7 +41,7 @@ io.on("connection", (socket) => {
 // Middleware
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: CLIENT_ORIGIN,
   })
 );
 app.use(express.json());
