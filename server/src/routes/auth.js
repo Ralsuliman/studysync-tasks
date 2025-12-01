@@ -9,16 +9,12 @@ import { sendVerificationEmail } from "../utils/mailer.js";
 const router = express.Router();
 const SALT_ROUNDS = 10;
 
-// SAME secret string as before, but allow env override
 const JWT_SECRET =
   process.env.JWT_SECRET || "supersecretstudysynckey123";
 
-// Base URL for the API – used to build the verification link
-// In Render, set API_BASE_URL=https://studysync-tasks-backend.onrender.com
 const API_BASE_URL =
   process.env.API_BASE_URL || "http://localhost:8080";
 
-// Simple helper to know if we're on Render/production
 const IS_PROD = process.env.NODE_ENV === "production";
 
 function createToken(user) {
@@ -33,7 +29,7 @@ function createToken(user) {
   );
 }
 
-// REGISTER with email verification
+// ✅ REGISTER with email verification + link back to frontend
 router.post("/register", async (req, res) => {
   try {
     let { name, email, password } = req.body;
@@ -48,7 +44,7 @@ router.post("/register", async (req, res) => {
 
     const existing = await User.findOne({ email });
 
-    // CASE 1: email already exists AND is verified → tell user to log in
+    // CASE 1: already verified → tell user to log in
     if (existing && existing.emailVerified) {
       console.log("Register: email already exists (verified)", email);
       return res
@@ -60,7 +56,7 @@ router.post("/register", async (req, res) => {
     let verificationToken;
 
     if (existing && !existing.emailVerified) {
-      // CASE 2: email exists but NOT verified → reuse user and re-send link
+      // CASE 2: exists but NOT verified
       console.log(
         "Register: email exists but not verified, resending link",
         email
@@ -76,7 +72,7 @@ router.post("/register", async (req, res) => {
 
       user = await existing.save();
     } else {
-      // CASE 3: completely new user
+      // CASE 3: brand-new user
       const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
       verificationToken = crypto.randomBytes(32).toString("hex");
 
@@ -89,34 +85,37 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    // after creating the user + verificationToken
+    // Build verification link
+    const verifyLink = `${API_BASE_URL}/api/auth/verify/${verificationToken}`;
 
-const verifyLink = `${API_BASE_URL}/api/auth/verify/${verificationToken}`;
+    // 👇 Decide what to send back to the frontend:
+    //  - In PRODUCTION (Render + Netlify): previewEmailURL = verifyLink (direct link)
+    //  - In DEV (localhost): previewEmailURL = Ethereal preview URL
+    let previewEmailURL = null;
 
-// Send response immediately
-res.status(201).json({
-  message:
-    "Account created! A verification email has been sent. Please verify your email before logging in.",
-  previewEmailURL: null, // updated later in dev
-});
+    if (IS_PROD) {
+      console.log("📨 [PROD] Verification email for:", user.email);
+      console.log("🔗 Verify link:", verifyLink);
+      // For the project demo, we *also* return the verify link so you can click it
+      previewEmailURL = verifyLink;
+    } else {
+      // Local dev: actually send via Ethereal and get preview URL
+      previewEmailURL = await sendVerificationEmail(user.email, verifyLink);
+    }
 
-// Send email AFTER response
-sendVerificationEmail(user.email, verifyLink)
-  .then((url) => {
-    console.log("📨 Verification email processed:", user.email);
-    if (url) console.log("📧 Preview URL:", url);
-  })
-  .catch((err) => {
-    console.error("❌ Email send error:", err);
-  });
-
+    // ✅ Send response *once*, with the right previewEmailURL
+    return res.status(201).json({
+      message:
+        "Account created! A verification email has been sent. Please verify your email before logging in.",
+      previewEmailURL,
+    });
   } catch (err) {
     console.error("Registration error:", err);
     return res.status(500).json({ error: "Registration failed." });
   }
 });
 
-// VERIFY endpoint: user clicks link from email
+// VERIFY endpoint
 router.get("/verify/:token", async (req, res) => {
   try {
     const { token } = req.params;
@@ -139,7 +138,7 @@ router.get("/verify/:token", async (req, res) => {
   }
 });
 
-// LOGIN (only if emailVerified = true)
+// LOGIN stays the same...
 router.post("/login", async (req, res) => {
   try {
     let { email, password } = req.body;
