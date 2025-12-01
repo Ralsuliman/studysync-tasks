@@ -301,9 +301,11 @@ const handleLogin = async (e) => {
   }
 };
 
-  // Register (with email verification)
+ // Register (with email verification)
 const handleRegister = async (e) => {
   e.preventDefault();
+
+  // clear old messages
   setRegisterMessage("");
   setPreviewEmailUrl("");
 
@@ -318,28 +320,41 @@ const handleRegister = async (e) => {
       }),
     });
 
+    // Try to parse JSON (if possible)
     let data = {};
     try {
       data = await res.json();
     } catch {
-      // ignore JSON parse errors
+      data = {};
     }
 
+    console.log("Register response:", res.status, data);
+
     if (res.ok) {
+      // ✅ Success
       setRegisterMessage(
         data.message ||
           "Account created! A verification email has been sent. Please verify your email before logging in."
       );
 
+      // Ethereal preview URL from backend
       if (data.previewEmailURL) {
         setPreviewEmailUrl(data.previewEmailURL);
       }
+
+      // (Optional) clear the fields
+      // setRegisterName("");
+      // setRegisterEmail("");
+      // setRegisterPassword("");
     } else {
+      // ❌ Backend returned an error status (4xx / 5xx)
       setRegisterMessage(data.error || "Registration failed.");
     }
   } catch (err) {
     console.error("Register network error:", err);
-    setRegisterMessage("Could not reach server. Check API_URL and backend.");
+    setRegisterMessage(
+      "Could not reach server. Check API_URL and backend."
+    );
   }
 };
 
