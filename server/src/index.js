@@ -2,34 +2,41 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import http from "http";                       // NEW
-import { Server as SocketIOServer } from "socket.io"; // NEW
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
 
 import tasksRouter from "./routes/tasks.js";
 import authRouter from "./routes/auth.js";
-import connectDB from "./db.js"; // whatever your DB connect file is called
+import connectDB from "./db.js";
 
 dotenv.config();
-
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Create HTTP server and attach Socket.IO
+// -----------------------------
+// 🔥 PARSE ALLOWED ORIGINS
+// -----------------------------
+const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:5173")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+// -----------------------------
+// 🔥 Create HTTP + Socket.IO server
+// -----------------------------
 const httpServer = http.createServer(app);
 
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: CLIENT_ORIGIN,
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
 
-// Make io available to routes via req.app.get("io")
 app.set("io", io);
 
-// Socket.IO basic logging
+// Socket logs
 io.on("connection", (socket) => {
   console.log("🔌 Socket connected:", socket.id);
 
@@ -38,15 +45,28 @@ io.on("connection", (socket) => {
   });
 });
 
-// Middleware
+// -----------------------------
+// 🔥 CORS Middleware
+// -----------------------------
 app.use(
   cors({
-    origin: CLIENT_ORIGIN,
+    origin: (origin, callback) => {
+      // allow tools with no origin (Postman) OR allowed origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS: " + origin));
+      }
+    },
+    credentials: true,
   })
 );
+
 app.use(express.json());
 
-// Routes
+// -----------------------------
+// 🔥 Routes
+// -----------------------------
 app.use("/api/auth", authRouter);
 app.use("/api/tasks", tasksRouter);
 
@@ -58,7 +78,6 @@ app.get("/", (req, res) => {
     message: "StudySync backend is running on / 🚀",
   });
 });
-
 app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
@@ -67,9 +86,12 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Connect DB then start server
+// -----------------------------
+// 🔥 Start server after DB connects
+// -----------------------------
 connectDB().then(() => {
   httpServer.listen(PORT, () => {
-    console.log(`Server running with Socket.IO on http://localhost:${PORT}`);
+    console.log(`Server running on PORT ${PORT}`);
+    console.log("Allowed origins:", allowedOrigins);
   });
 });
