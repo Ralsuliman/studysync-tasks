@@ -44,19 +44,19 @@ io.on("connection", (socket) => {
 // Middleware
 // -----------------------------
 
-// Parse allowed origins properly
-const allowedOrigins = CLIENT_ORIGIN.split(",").map((o) => o.trim());
+// ---------------- CORS ----------------
+const allowedOrigins = (process.env.CLIENT_ORIGIN || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+console.log("Allowed origins:", allowedOrigins);
 
 app.use(
   cors({
-    origin: function (origin, cb) {
-      // Allow server → Netlify → Render flow
-      if (!origin || allowedOrigins.includes(origin)) {
-        cb(null, true);
-      } else {
-        cb(new Error("CORS blocked: " + origin));
-      }
-    },
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
