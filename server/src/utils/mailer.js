@@ -1,3 +1,4 @@
+// server/src/utils/mailer.js
 import nodemailer from "nodemailer";
 
 export async function sendVerificationEmail(to, verifyLink) {

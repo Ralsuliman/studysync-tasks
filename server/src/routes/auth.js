@@ -58,7 +58,10 @@ router.post("/register", async (req, res) => {
 
     if (existing && !existing.emailVerified) {
       // CASE 2: email exists but NOT verified → reuse user and re-send link
-      console.log("Register: email exists but not verified, resending link", email);
+      console.log(
+        "Register: email exists but not verified, resending link",
+        email
+      );
 
       verificationToken =
         existing.verificationToken ||
@@ -84,12 +87,23 @@ router.post("/register", async (req, res) => {
     }
 
     const verifyLink = `${API_BASE_URL}/api/auth/verify/${verificationToken}`;
+    console.log("📨 Sending verification email to:", user.email);
+    console.log("🔗 Verification link:", verifyLink);
 
-    // send the actual email (Ethereal)
-    const previewEmailURL = await sendVerificationEmail(
-      user.email,
-      verifyLink
-    );
+    // ---- NEW: wrap email send in try/catch so route ALWAYS responds ----
+    let previewEmailURL = null;
+    try {
+      previewEmailURL = await sendVerificationEmail(
+        user.email,
+        verifyLink
+      );
+      console.log("✅ Email sent. Preview URL:", previewEmailURL);
+    } catch (emailErr) {
+      console.error("❌ ERROR sending verification email:", emailErr);
+      // We STILL return 201 so the frontend shows a message.
+      // previewEmailURL will just be null.
+    }
+    // ------------------------------------------------------------------
 
     res.status(201).json({
       message:
