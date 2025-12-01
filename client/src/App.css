@@ -1,0 +1,374 @@
+/* ============================
+   GENERAL PAGE SETUP
+============================ */
+.app {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f7f7f7;
+  min-height: 100vh;
+  width: 100vw;
+  color: #111;
+}
+
+/* ============================
+   HEADER
+============================ */
+.app-header {
+  background-color: #4f46e5; /* Purple */
+  color: white;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2.3rem;
+}
+
+.subtitle {
+  margin-top: 10px;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* ============================
+   MAIN LAYOUT
+============================ */
+.app-main {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 30px;
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ============================
+   CARD LAYOUT
+============================ */
+.card {
+  background-color: white;
+  padding: 25px;
+  width: 450px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  color: #111;
+}
+
+.card h2 {
+  margin-top: 0;
+  color: #4f46e5;
+}
+
+/* ============================
+   COURSE TABS (Clickable Courses)
+============================ */
+.course-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 15px 0 25px 0;
+}
+
+.course-tab {
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.course-tab:hover {
+  border-color: #4f46e5;
+  color: #4f46e5;
+}
+
+.course-tab.active {
+  background-color: #4f46e5;
+  color: #fff;
+  border-color: #4f46e5;
+}
+
+/* ============================
+   FILTER & SORT ROW
+============================ */
+.section-title {
+  margin-top: 25px;
+  margin-bottom: 10px;
+  color: #4f46e5;
+}
+
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 15px;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+
+.filter-label {
+  margin-bottom: 4px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.filter-select {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  background: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-width: 160px;
+  transition: 0.15s ease;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.12);
+}
+
+/* ============================
+   ADD TASK FORM
+============================ */
+.task-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 15px 0;
+}
+
+.task-form input,
+.task-form select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 0.9rem;
+  flex: 1;
+  min-width: 150px;
+  color: #111;
+  background: white !important;
+}
+
+.task-form button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background-color: #4f46e5;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.task-form button:hover {
+  opacity: 0.9;
+}
+
+/* ============================
+   TASK LIST
+============================ */
+.task-list {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 15px;
+}
+
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  background: #fafafa;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #eee;
+}
+
+.task-text {
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+}
+
+.task-title {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.task-title.done {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.task-description {
+  font-size: 0.85rem;
+  margin-top: 3px;
+  opacity: 0.8;
+}
+
+.task-meta {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+  gap: 2px;
+}
+
+.task-course {
+  font-size: 0.78rem;
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 2px 8px;
+  border-radius: 6px;
+  width: fit-content;
+  margin-bottom: 3px;
+}
+
+/* ============================
+   TASK ACTION BUTTONS
+============================ */
+.task-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.delete-btn {
+  border: none;
+  background: transparent;
+  color: #e11d48;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.edit-btn {
+  padding: 4px 10px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.edit-btn:hover {
+  opacity: 0.9;
+}
+
+/* ============================
+   EDIT FORM
+============================ */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.edit-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.edit-form input,
+.edit-form select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 0.9rem;
+  background: #ffffff !important;
+  color: #111 !important;
+}
+
+.edit-buttons button {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.edit-buttons button:first-child {
+  background: #4f46e5;
+  color: white;
+}
+
+.edit-buttons button:last-child {
+  background: #ccc;
+}
+
+/* ============================
+   AUTH FORMS
+============================ */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 280px;
+  margin: 0 auto;
+}
+
+.auth-form input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white !important;
+  color: #111 !important;
+}
+
+.auth-form button {
+  padding: 10px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.auth-form button:hover {
+  opacity: 0.9;
+}
+
+/* Force all inputs to be visible in Safari dark mode */
+input,
+select,
+textarea {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+}
+
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dashboard-row {
+  background: #f9f5ff;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.dashboard-course {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.dashboard-counts {
+  font-size: 0.9rem;
+  color: #444;
+  display: flex;
+  flex-direction: column; /* one per line */
+  gap: 2px;
+}
