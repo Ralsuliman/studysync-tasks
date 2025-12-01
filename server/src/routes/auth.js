@@ -89,23 +89,26 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    const verifyLink = `${API_BASE_URL}/api/auth/verify/${verificationToken}`;
+    // after creating the user + verificationToken
 
-    // ✅ Always return immediately
-    res.status(201).json({
-      message:
-        "Account created! A verification email has been sent. Please verify your email before logging in.",
-    });
+const verifyLink = `${API_BASE_URL}/api/auth/verify/${verificationToken}`;
 
-    // 📧 Send email AFTER sending response (non-blocking)
-    sendVerificationEmail(user.email, verifyLink)
-      .then((url) => {
-        console.log("📨 Verification email processed:", user.email);
-        if (url) console.log("📧 Preview URL:", url);
-      })
-      .catch((err) => {
-        console.error("❌ Email send error:", err);
-      });
+// Send response immediately
+res.status(201).json({
+  message:
+    "Account created! A verification email has been sent. Please verify your email before logging in.",
+  previewEmailURL: null, // updated later in dev
+});
+
+// Send email AFTER response
+sendVerificationEmail(user.email, verifyLink)
+  .then((url) => {
+    console.log("📨 Verification email processed:", user.email);
+    if (url) console.log("📧 Preview URL:", url);
+  })
+  .catch((err) => {
+    console.error("❌ Email send error:", err);
+  });
 
   } catch (err) {
     console.error("Registration error:", err);

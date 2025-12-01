@@ -5,13 +5,13 @@ export async function sendVerificationEmail(to, verifyLink) {
   const IS_PROD = process.env.NODE_ENV === "production";
 
   if (IS_PROD) {
-    // 🔥 PRODUCTION — DO NOT use Ethereal. Just log.
+    // 🔥 PRODUCTION — DO NOT use Ethereal
     console.log("📨 [PROD] Verification email would be sent to:", to);
     console.log("🔗 Verify link:", verifyLink);
-    return null; // no preview URL in production
+    return null;
   }
 
-  // 🔧 LOCAL DEVELOPMENT — use Ethereal
+  // 🔧 DEVELOPMENT — Ethereal preview URL
   const testAccount = await nodemailer.createTestAccount();
 
   const transporter = nodemailer.createTransport({
@@ -30,24 +30,11 @@ export async function sendVerificationEmail(to, verifyLink) {
     subject: "Verify your StudySync email",
     html: `
       <h2>Email Verification</h2>
-      <p>Thank you for registering to StudySync Tasks.</p>
-      <p>Please click the button below to verify your email:</p>
-      <a href="${verifyLink}"
-         style="
-           padding:10px 18px;
-           background:#4f46e5;
-           color:white;
-           text-decoration:none;
-           border-radius:6px;
-         ">
-        Verify Email
-      </a>
-      <p>Or copy this link: ${verifyLink}</p>
+      <p>Click below to verify:</p>
+      <a href="${verifyLink}">Verify Email</a>
+      <p>Or copy: ${verifyLink}</p>
     `,
   });
 
-  const previewUrl = nodemailer.getTestMessageUrl(info);
-  console.log("📧 Preview URL:", previewUrl);
-
-  return previewUrl;
+  return nodemailer.getTestMessageUrl(info);
 }
