@@ -11,32 +11,27 @@ import connectDB from "./db.js";
 
 dotenv.config();
 
-const app = express();
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 const PORT = process.env.PORT || 8080;
 
-// -----------------------------
-// 🔥 PARSE ALLOWED ORIGINS
-// -----------------------------
-const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:5173")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+const app = express();
 
 // -----------------------------
-// 🔥 Create HTTP + Socket.IO server
+// Create HTTP + Socket.IO server
 // -----------------------------
 const httpServer = http.createServer(app);
 
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: CLIENT_ORIGIN.split(",").map((o) => o.trim()),
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
 
+// Make io available in routes
 app.set("io", io);
 
-// Socket logs
+// Socket.io basic logs
 io.on("connection", (socket) => {
   console.log("🔌 Socket connected:", socket.id);
 
@@ -46,52 +41,56 @@ io.on("connection", (socket) => {
 });
 
 // -----------------------------
-// 🔥 CORS Middleware
+// Middleware
 // -----------------------------
+
+// Parse allowed origins properly
+const allowedOrigins = CLIENT_ORIGIN.split(",").map((o) => o.trim());
+
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // allow tools with no origin (Postman) OR allowed origins
+    origin: function (origin, cb) {
+      // Allow server → Netlify → Render flow
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
+        cb(null, true);
       } else {
-        callback(new Error("Not allowed by CORS: " + origin));
+        cb(new Error("CORS blocked: " + origin));
       }
     },
     credentials: true,
   })
 );
 
+// JSON parser
 app.use(express.json());
 
 // -----------------------------
-// 🔥 Routes
+// Routes
 // -----------------------------
 app.use("/api/auth", authRouter);
 app.use("/api/tasks", tasksRouter);
 
-// Health check
+// Simple health check
 app.get("/", (req, res) => {
   res.json({
     ok: true,
-    where: "root",
-    message: "StudySync backend is running on / 🚀",
-  });
-});
-app.get("/api/health", (req, res) => {
-  res.json({
-    ok: true,
-    where: "/api/health",
     message: "StudySync backend is running 🚀",
+    origin: CLIENT_ORIGIN,
   });
 });
 
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, route: "/api/health" });
+});
+
 // -----------------------------
-// 🔥 Start server after DB connects
+// Start server
 // -----------------------------
 connectDB().then(() => {
   httpServer.listen(PORT, () => {
-    console.log(`Server running on PORT ${PORT}`);
-    console.log("Allowed origins:", allowedOrigins);
+    console.log("========================================");
+    console.log("🚀 Backend running on: http://localhost:" + PORT);
+    console.log("🌍 Allowed origins:", allowedOrigins);
+    console.log("========================================");
   });
 });
