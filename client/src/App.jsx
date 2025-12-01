@@ -263,17 +263,25 @@ function App() {
     cancelEditing();
   };
 
-  // Login
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoginMessage("");
+// Login
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setLoginMessage("");
 
+  try {
     const res = await fetch(`${API_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: loginEmail, password: loginPassword }),
     });
-    const data = await res.json();
+
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {
+      // ignore JSON parse errors
+    }
+
     if (res.ok) {
       setToken(data.token);
       setUserName(data.user.name);
@@ -282,16 +290,21 @@ function App() {
     } else {
       setToken(null);
       setUserName("");
-      setLoginMessage(data.error || "Login failed");
+      setLoginMessage(data.error || "Login failed.");
     }
-  };
+  } catch (err) {
+    console.error("Login network error:", err);
+    setLoginMessage("Could not reach server. Check API_URL and backend.");
+  }
+};
 
   // Register (with email verification)
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setRegisterMessage("");
-    setPreviewEmailUrl("");
+const handleRegister = async (e) => {
+  e.preventDefault();
+  setRegisterMessage("");
+  setPreviewEmailUrl("");
 
+  try {
     const res = await fetch(`${API_URL}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -302,7 +315,12 @@ function App() {
       }),
     });
 
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {
+      // ignore JSON parse errors
+    }
 
     if (res.ok) {
       setRegisterMessage(
@@ -316,7 +334,11 @@ function App() {
     } else {
       setRegisterMessage(data.error || "Registration failed.");
     }
-  };
+  } catch (err) {
+    console.error("Register network error:", err);
+    setRegisterMessage("Could not reach server. Check API_URL and backend.");
+  }
+};
 
   // Logout
   const handleLogout = () => {
