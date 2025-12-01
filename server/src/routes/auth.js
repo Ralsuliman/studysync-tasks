@@ -18,6 +18,9 @@ const JWT_SECRET =
 const API_BASE_URL =
   process.env.API_BASE_URL || "http://localhost:8080";
 
+// Simple helper to know if we're on Render/production
+const IS_PROD = process.env.NODE_ENV === "production";
+
 function createToken(user) {
   return jwt.sign(
     {
@@ -87,32 +90,26 @@ router.post("/register", async (req, res) => {
     }
 
     const verifyLink = `${API_BASE_URL}/api/auth/verify/${verificationToken}`;
-    console.log("📨 Sending verification email to:", user.email);
-    console.log("🔗 Verification link:", verifyLink);
 
-    // ---- NEW: wrap email send in try/catch so route ALWAYS responds ----
-    let previewEmailURL = null;
-    try {
-      previewEmailURL = await sendVerificationEmail(
-        user.email,
-        verifyLink
-      );
-      console.log("✅ Email sent. Preview URL:", previewEmailURL);
-    } catch (emailErr) {
-      console.error("❌ ERROR sending verification email:", emailErr);
-      // We STILL return 201 so the frontend shows a message.
-      // previewEmailURL will just be null.
-    }
-    // ------------------------------------------------------------------
-
+    // ✅ Always return immediately
     res.status(201).json({
       message:
         "Account created! A verification email has been sent. Please verify your email before logging in.",
-      previewEmailURL,
     });
+
+    // 📧 Send email AFTER sending response (non-blocking)
+    sendVerificationEmail(user.email, verifyLink)
+      .then((url) => {
+        console.log("📨 Verification email processed:", user.email);
+        if (url) console.log("📧 Preview URL:", url);
+      })
+      .catch((err) => {
+        console.error("❌ Email send error:", err);
+      });
+
   } catch (err) {
     console.error("Registration error:", err);
-    res.status(500).json({ error: "Registration failed." });
+    return res.status(500).json({ error: "Registration failed." });
   }
 });
 
