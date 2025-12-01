@@ -9,8 +9,14 @@ import { sendVerificationEmail } from "../utils/mailer.js";
 const router = express.Router();
 const SALT_ROUNDS = 10;
 
-// SAME secret as middleware/auth.js
-const JWT_SECRET = "supersecretstudysynckey123";
+// SAME secret string as before, but allow env override
+const JWT_SECRET =
+  process.env.JWT_SECRET || "supersecretstudysynckey123";
+
+// Base URL for the API – used to build the verification link
+// In Render, set API_BASE_URL=https://studysync-tasks-backend.onrender.com
+const API_BASE_URL =
+  process.env.API_BASE_URL || "http://localhost:8080";
 
 function createToken(user) {
   return jwt.sign(
@@ -38,28 +44,52 @@ router.post("/register", async (req, res) => {
     email = email.trim().toLowerCase();
 
     const existing = await User.findOne({ email });
-    if (existing) {
-      console.log("Register: email already exists", email);
-      return res.status(409).json({ error: "Email already exists" });
+
+    // CASE 1: email already exists AND is verified → tell user to log in
+    if (existing && existing.emailVerified) {
+      console.log("Register: email already exists (verified)", email);
+      return res
+        .status(409)
+        .json({ error: "Email already exists. Please log in instead." });
     }
 
-    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+    let user;
+    let verificationToken;
 
-    // create a random token for verification
-    const verificationToken = crypto.randomBytes(32).toString("hex");
+    if (existing && !existing.emailVerified) {
+      // CASE 2: email exists but NOT verified → reuse user and re-send link
+      console.log("Register: email exists but not verified, resending link", email);
 
-    const user = await User.create({
-      name,
-      email,
-      passwordHash,
-      emailVerified: false,
-      verificationToken,
-    });
+      verificationToken =
+        existing.verificationToken ||
+        crypto.randomBytes(32).toString("hex");
 
-    const verifyLink = `http://localhost:8080/api/auth/verify/${verificationToken}`;
+      existing.name = name;
+      existing.passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+      existing.verificationToken = verificationToken;
+
+      user = await existing.save();
+    } else {
+      // CASE 3: completely new user
+      const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+      verificationToken = crypto.randomBytes(32).toString("hex");
+
+      user = await User.create({
+        name,
+        email,
+        passwordHash,
+        emailVerified: false,
+        verificationToken,
+      });
+    }
+
+    const verifyLink = `${API_BASE_URL}/api/auth/verify/${verificationToken}`;
 
     // send the actual email (Ethereal)
-    const previewEmailURL = await sendVerificationEmail(user.email, verifyLink);
+    const previewEmailURL = await sendVerificationEmail(
+      user.email,
+      verifyLink
+    );
 
     res.status(201).json({
       message:
